@@ -1,0 +1,43 @@
+[package]
+name = "meme-cutscene-skip"
+version = "0.1.0"
+edition = "2024"
+
+# Standalone crate with its own workspace (split off from drmod-rs, the project it
+# grew out of).
+[workspace]
+
+[lib]
+name = "meme_cutscene_skip_lib"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "meme_cutscene_skip"
+path = "src/main.rs"
+
+[dependencies.windows]
+version = "0.62.2"
+features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Memory",
+    "Win32_System_SystemInformation",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_UI_WindowsAndMessaging",
+]
+
+[build-dependencies]
+cc = "1"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+# The hook detour cannot unwind across an extern "system" boundary anyway (Rust
+# aborts the process), so unwind tables are dead weight here — a size win.
+# `cargo test` uses the dev profile and is unaffected.
+panic = "abort"
