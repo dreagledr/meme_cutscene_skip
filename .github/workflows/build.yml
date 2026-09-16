@@ -17,11 +17,14 @@ jobs:
       - name: Add i686 target
         run: rustup target add i686-pc-windows-msvc
 
-      - name: Install UPX
-        run: choco install upx -y
+      - name: Build
+        run: cargo build --release
 
-      - name: Build, compress, package
-        run: .\build.ps1
+      - name: Package
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item target/i686-pc-windows-msvc/release/meme_cutscene_skip.exe out/
+          Compress-Archive -Path out/meme_cutscene_skip.exe -DestinationPath out/meme_cutscene_skip.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5

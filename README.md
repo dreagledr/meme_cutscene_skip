@@ -28,18 +28,6 @@ to ship. The crate builds for `i686-pc-windows-msvc` (the game is 32-bit), as se
 in `.cargo/config.toml`; MSVC C++ build tools are required (MinHook's C code is
 compiled).
 
-For an even smaller binary there is UPX — see `build.ps1`:
-
-```powershell
-pwsh build.ps1           # cargo build --release + upx --best --lzma exe
-pwsh build.ps1 -NoUpx
-```
-
-⚠️ UPX packs **the launcher only** (exe ~523 KB → ~192 KB; the DLL is inside). The
-DLL in `target/` must not be packed: it is the payload embedded into the exe at
-compile time and extracted to `%LOCALAPPDATA%\meme_cutscene_skip\` at launch. And
-UPX is always the last step: the next `cargo build` overwrites the exe uncompressed.
-
 Tests (a fresh debug build is required: the launcher embeds the DLL via
 `include_bytes!`, and without it `cargo test` cannot be built):
 
@@ -52,8 +40,8 @@ cargo test --lib                  # state-machine logic only, no DLL build
 ## CI and releases
 
 On a `v*` tag push, `.github/workflows/build.yml` builds the Windows artifact
-(`build.ps1` → UPX → `out/meme_cutscene_skip.zip`), attaches it to a GitHub Release
-and, when configured, uploads it to Yandex Object Storage.
+(`cargo build --release` → `out/meme_cutscene_skip.zip`), attaches it to a GitHub
+Release and, when configured, uploads it to Yandex Object Storage.
 
 For the S3 upload the repository must define (Settings → Secrets and
 variables → Actions):
