@@ -1,5 +1,6 @@
 //! Mod log in `%LOCALAPPDATA%\meme_cutscene_skip\meme_cutscene_skip.log` (the
-//! launcher reads the same file with `--follow`).
+//! launcher reads the same file with `--follow`). Debug builds only — see
+//! `LOG_ENABLED`.
 
 use std::io::Write;
 use std::sync::Mutex;
@@ -22,7 +23,12 @@ fn timestamp() -> String {
 
 /// Appends a timestamped line. I/O errors are silently ignored: the log is not a
 /// critical path, and panicking inside the hook detour is not acceptable.
+///
+/// Release builds return immediately, so they never create the file.
 pub(crate) fn log_line(line: &str) {
+    if !crate::LOG_ENABLED {
+        return;
+    }
     let Ok(_guard) = LOG_MUTEX.lock() else {
         return;
     };

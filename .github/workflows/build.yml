@@ -17,58 +17,24 @@ jobs:
       - name: Add i686 target
         run: rustup target add i686-pc-windows-msvc
 
-      - name: Build
-        run: cargo build --release
+      - name: Build and package
+        run: ./build.ps1
 
-      - name: Package
-        run: |
-          New-Item -ItemType Directory -Force out | Out-Null
-          Copy-Item target/i686-pc-windows-msvc/release/meme_cutscene_skip.exe out/
-          Compress-Archive -Path out/meme_cutscene_skip.exe -DestinationPath out/meme_cutscene_skip.zip
-
-      - name: Upload artifact
+      - name: Upload ASI artifact
         uses: actions/upload-artifact@v5
         with:
           name: meme_cutscene_skip
           path: out/meme_cutscene_skip.zip
 
+      - name: Upload injector artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: meme_cutscene_skip_injector
+          path: out/meme_cutscene_skip_injector.zip
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: out/meme_cutscene_skip.zip
-
-  upload-s3:
-    name: Upload to Yandex S3
-    needs: build
-    # Skipped until the S3_BUCKET repository variable is set.
-    if: ${{ vars.S3_BUCKET != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: meme_cutscene_skip
-          path: dist
-
-      - name: Unzip artifact
-        run: |
-          mkdir -p dist/unpacked
-          unzip dist/meme_cutscene_skip.zip -d dist/unpacked
-
-      - name: Fetch S3 secrets from Lockbox
-        id: lockbox
-        uses: yc-actions/yc-lockbox@v2
-        with:
-          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          secret-id: ${{ vars.LOCKBOX_SECRET_ID }}
-
-      - name: Upload to Yandex Object Storage
-        uses: nekitcorp/yandex-storage-website-action@v2
-        with:
-          access-key-id: ${{ steps.lockbox.outputs.S3_API_KEY_ID }}
-          secret-access-key: ${{ steps.lockbox.outputs.S3_API_KEY_VALUE }}
-          bucket: ${{ vars.S3_BUCKET }}
-          clear: true
-          working-directory: dist/unpacked
-          include: |
-            **/*
+          files: |
+            out/meme_cutscene_skip.zip
+            out/meme_cutscene_skip_injector.zip

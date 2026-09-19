@@ -1,6 +1,6 @@
 [package]
 name = "meme-cutscene-skip"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 # Standalone crate with its own workspace (split off from drmod-rs, the project it

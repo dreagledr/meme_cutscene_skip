@@ -1,6 +1,6 @@
 //! Mod launcher: finds the game (next to itself → a known Steam path → `--exe`),
 //! starts it when needed, injects the embedded DLL and can optionally tail the
-//! mod log (`--follow`).
+//! mod log (`--follow`, debug builds only — release builds write no log).
 //!
 //! It also works from `cargo run`: the game exe is looked up in conventional
 //! paths, and if the game is already running the injection goes straight into it.
@@ -11,7 +11,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use meme_cutscene_skip_lib::{DEFAULT_TITLE, LIB_NAME, PROCESS_NAME, data_dir, log_path};
+use meme_cutscene_skip_lib::{
+    DEFAULT_TITLE, LIB_NAME, LOG_ENABLED, PROCESS_NAME, data_dir, log_path,
+};
 
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::System::Diagnostics::Debug::WriteProcessMemory;
@@ -133,7 +135,7 @@ fn main() {
                 "inject OK: LoadLibraryW returned 0x{handle:08X} ({})",
                 dll.display()
             );
-            if let Some(path) = log_path() {
+            if LOG_ENABLED && let Some(path) = log_path() {
                 println!("mod log: {}", path.display());
             }
         }
@@ -189,7 +191,7 @@ fn parse_args() -> Result<Args, String> {
                      --exe <path>     path to the game exe (otherwise searched next to the launcher/in Steam)\n\
                      --kill-first     terminate the running game and start it again\n\
                      --no-launch      do not start the game (inject into a running one only)\n\
-                     --follow         after injecting, print the mod log (Ctrl+C to exit)\n\
+                     --follow         after injecting, print the mod log (debug builds; Ctrl+C to exit)\n\
                      --timeout <sec>  how long to wait for the game window (default 120)"
                 );
                 std::process::exit(0);
@@ -397,6 +399,10 @@ fn inject_and_check(process: HANDLE, dll_path: &Path) -> Result<usize, String> {
 
 /// Prints new mod log lines until interrupted (Ctrl+C).
 fn follow_log() {
+    if !LOG_ENABLED {
+        println!("this build writes no log: logging is enabled in debug builds only");
+        return;
+    }
     let Some(path) = log_path() else {
         return;
     };

@@ -30,6 +30,11 @@ const DATA_DIR_NAME: &str = "meme_cutscene_skip";
 /// Mod log file name.
 const LOG_FILE: &str = "meme_cutscene_skip.log";
 
+/// Whether this build writes the mod log. Debug builds do, release builds do
+/// not: the release is what end users run, and a log file in `%LOCALAPPDATA%` is
+/// waste for them (the launcher's `--follow` is a development feature too).
+pub const LOG_ENABLED: bool = cfg!(debug_assertions);
+
 /// Mod directory: `%LOCALAPPDATA%\meme_cutscene_skip` (log and extracted DLL).
 pub fn data_dir() -> Option<PathBuf> {
     std::env::var("LOCALAPPDATA")
